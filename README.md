@@ -21,6 +21,28 @@ dotnet run
 powershell -ExecutionPolicy Bypass -File .\publish-clean.ps1
 ```
 
+## Installer Package
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\package-installer.ps1
+```
+
+This creates:
+
+```text
+dist\IptvViewer-Windows-Installer.zip
+```
+
+The ZIP contains `install.cmd`, `install.ps1`, `uninstall.cmd`, `uninstall.ps1`, and the app files.
+
+To update an existing install later, build a new ZIP, unzip it, close IPTV Viewer, and run:
+
+```powershell
+.\install.cmd
+```
+
+The installer replaces the app files and keeps saved user data under `%LOCALAPPDATA%\IptvViewer`.
+
 User data is stored per machine under:
 
 ```text

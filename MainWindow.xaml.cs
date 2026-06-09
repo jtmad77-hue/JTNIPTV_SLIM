@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Xml.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -25,6 +26,7 @@ public partial class MainWindow : Window
     private const string DefaultServerUrl = "";
     private const string DefaultUsername = "";
     private const string DefaultPassword = "";
+    private const string FreeServicesSeedFileName = "free_services_seeded.flag";
     private const int ContinueWatchingLimit = 50;
     private const int HistoryLimit = 5000;
     private const int LiveBufferMinutes = 15;
@@ -61,6 +63,13 @@ public partial class MainWindow : Window
         .Where(endpoint => endpoint.Action is "get_series_categories" or "get_series")
         .ToArray();
 
+    private static readonly SavedService[] FreeStarterServices =
+    [
+        new("Free - IPTV.org USA", "https://iptv-org.github.io/iptv/countries/us.m3u", string.Empty, string.Empty),
+        new("Free - IPTV.org All Countries", "https://iptv-org.github.io/iptv/index.m3u", string.Empty, string.Empty),
+        new("Free - Free-TV Public Playlist", "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8", string.Empty, string.Empty)
+    ];
+
     private readonly ObservableCollection<SavedService> _services = [];
     private readonly ObservableCollection<IptvListItem> _results = [];
     private readonly ObservableCollection<IptvListItem> _favoritesHome = [];
@@ -87,6 +96,7 @@ public partial class MainWindow : Window
     private bool _isInitialized;
     private bool _isUpdatingOverlayScreenSelector;
     private bool _isSeekingPlayback;
+    private bool _isEditingService;
     private string _browseTypeFilter = "all";
     private string _categoryFilter = "all";
     private WindowState _previousWindowState;
@@ -112,6 +122,8 @@ public partial class MainWindow : Window
     private static string HistoryPath => Path.Combine(AppDataDirectory, "history.json");
 
     private static string ContinueWatchingPath => Path.Combine(AppDataDirectory, "continue_watching.json");
+
+    private static string FreeServicesSeedPath => Path.Combine(AppDataDirectory, FreeServicesSeedFileName);
 
     public ICollectionView ResultsView { get; }
 
@@ -205,6 +217,14 @@ public partial class MainWindow : Window
         await LoadGuideAsync(forceRefresh: true);
     }
 
+    private void OpenPublisherWebsiteButton_Click(object sender, RoutedEventArgs e)
+    {
+        Process.Start(new ProcessStartInfo("https://jtntechs.com/")
+        {
+            UseShellExecute = true
+        });
+    }
+
     private void LoadCacheButton_Click(object sender, RoutedEventArgs e)
     {
         if (!TryCreateCredentials(out XtreamCredentials? credentials))
@@ -296,6 +316,7 @@ public partial class MainWindow : Window
             ServicesComboBox.ItemsSource = _services;
             ServicesComboBox.SelectedItem = _services.FirstOrDefault();
             ApplySelectedServiceToForm();
+            SetServiceEditorVisible(false);
             LoadHomeLists();
             ShowHomePanel();
             StatusTextBlock.Text = $"Imported saved data from {dialog.FileName}.";
@@ -310,6 +331,7 @@ public partial class MainWindow : Window
     {
         if (!TryCreateCredentials(out XtreamCredentials? credentials))
         {
+            SetServiceEditorVisible(true);
             return;
         }
 
@@ -329,7 +351,31 @@ public partial class MainWindow : Window
         }
 
         SaveJson(ServicesPath, _services.ToList());
+        SetServiceEditorVisible(false);
         StatusTextBlock.Text = $"Saved service '{saved.Name}'.";
+    }
+
+    private void EditServiceButton_Click(object sender, RoutedEventArgs e)
+    {
+        ApplySelectedServiceToForm();
+        SetServiceEditorVisible(true);
+        AccountNameTextBox.Focus();
+    }
+
+    private void AddServiceButton_Click(object sender, RoutedEventArgs e)
+    {
+        AccountNameTextBox.Text = string.Empty;
+        ServerUrlTextBox.Text = string.Empty;
+        UsernameTextBox.Text = string.Empty;
+        PasswordInput.Password = string.Empty;
+        SetServiceEditorVisible(true);
+        AccountNameTextBox.Focus();
+    }
+
+    private void CancelServiceEditButton_Click(object sender, RoutedEventArgs e)
+    {
+        ApplySelectedServiceToForm();
+        SetServiceEditorVisible(false);
     }
 
     private async void EndpointButton_Click(object sender, RoutedEventArgs e)
@@ -396,6 +442,10 @@ public partial class MainWindow : Window
     private void ServicesComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         ApplySelectedServiceToForm();
+        if (_isInitialized)
+        {
+            SetServiceEditorVisible(false);
+        }
     }
 
     private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -667,11 +717,6 @@ public partial class MainWindow : Window
             case "25":
                 ReturnToDefaultVideoLayout();
                 break;
-            case "50":
-                ExitFullscreen();
-                SetSplitVideoLayout(playerWeight: 1, resultsWeight: 1);
-                SetVideoOverlayVisible(true);
-                break;
             case "full":
                 ExitFullscreen();
                 SetFullVideoLayout(true);
@@ -758,7 +803,7 @@ public partial class MainWindow : Window
         _isFullscreen = true;
         SetOverlayScreenMode("fullscreen");
         SetVideoOverlayVisible(true);
-        FullScreenButton.Content = "↙";
+        FullScreenButton.Content = "EXIT";
         FullScreenButton.ToolTip = "Exit fullscreen";
     }
 
@@ -770,7 +815,7 @@ public partial class MainWindow : Window
     private void Video25Button_Click(object sender, RoutedEventArgs e)
     {
         ExitFullscreen();
-        SetSplitVideoLayout(playerWeight: 1, resultsWeight: 3);
+        SetSplitVideoLayout(playerWeight: 65, resultsWeight: 35);
         SetOverlayScreenMode("25");
         SetVideoOverlayVisible(false);
     }
@@ -800,10 +845,11 @@ public partial class MainWindow : Window
         SpacerColumn.Width = isFullVideo ? new GridLength(0) : new GridLength(24);
         HeaderRow.Height = isFullVideo ? new GridLength(0) : GridLength.Auto;
         SearchRow.Height = isFullVideo ? new GridLength(0) : GridLength.Auto;
-        ResultsRow.Height = isFullVideo ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
-        PlayerRow.Height = isFullVideo ? new GridLength(1, GridUnitType.Star) : new GridLength(360);
+        SplitterRow.Height = isFullVideo ? new GridLength(0) : new GridLength(6);
+        ResultsRow.Height = isFullVideo ? new GridLength(0) : new GridLength(35, GridUnitType.Star);
+        PlayerRow.Height = isFullVideo ? new GridLength(1, GridUnitType.Star) : new GridLength(65, GridUnitType.Star);
 
-        FullVideoButton.Content = isFullVideo ? "▥" : "▣";
+        FullVideoButton.Content = isFullVideo ? "WIN" : "FULL";
         FullVideoButton.ToolTip = isFullVideo ? "Exit full video view" : "Full video view inside the app";
         SetOverlayScreenMode(isFullVideo ? "full" : "25");
         SetVideoOverlayVisible(isFullVideo);
@@ -814,6 +860,20 @@ public partial class MainWindow : Window
         SetFullVideoLayout(false);
         PlayerRow.Height = new GridLength(playerWeight, GridUnitType.Star);
         ResultsRow.Height = new GridLength(resultsWeight, GridUnitType.Star);
+    }
+
+    private void PlayerListSplitter_DragDelta(object sender, DragDeltaEventArgs e)
+    {
+        if (_isFullVideo || _isFullscreen)
+        {
+            return;
+        }
+
+        double totalHeight = Math.Max(1, PlayerRow.ActualHeight + ResultsRow.ActualHeight);
+        double playerHeight = Math.Clamp(PlayerRow.ActualHeight + e.VerticalChange, totalHeight * 0.35, totalHeight * 0.85);
+        double resultsHeight = Math.Max(totalHeight - playerHeight, totalHeight * 0.15);
+        PlayerRow.Height = new GridLength(playerHeight, GridUnitType.Star);
+        ResultsRow.Height = new GridLength(resultsHeight, GridUnitType.Star);
     }
 
     private void ExitFullscreen()
@@ -836,7 +896,7 @@ public partial class MainWindow : Window
         _isFullscreen = false;
         SetVideoOverlayVisible(_isFullVideo);
         SetOverlayScreenMode(_isFullVideo ? "full" : "25");
-        FullScreenButton.Content = "⛶";
+        FullScreenButton.Content = "IPTV";
         FullScreenButton.ToolTip = "Fullscreen video";
     }
 
@@ -1003,6 +1063,11 @@ public partial class MainWindow : Window
 
     private async Task<IReadOnlyList<IptvListItem>> FetchEndpointAsync(XtreamCredentials credentials, EndpointDefinition endpoint)
     {
+        if (IsFreePlaylistService(credentials))
+        {
+            return await FetchM3uEndpointAsync(credentials, endpoint);
+        }
+
         Uri requestUri = BuildPlayerApiUri(credentials, endpoint.Action);
         using HttpResponseMessage response = await _httpClient.GetAsync(requestUri);
         response.EnsureSuccessStatusCode();
@@ -1042,6 +1107,126 @@ public partial class MainWindow : Window
         }
 
         return items;
+    }
+
+    private async Task<IReadOnlyList<IptvListItem>> FetchM3uEndpointAsync(XtreamCredentials credentials, EndpointDefinition endpoint)
+    {
+        if (endpoint.Action is not ("get_live_categories" or "get_live_streams"))
+        {
+            return [];
+        }
+
+        using HttpResponseMessage response = await _httpClient.GetAsync(credentials.ServerUrl);
+        response.EnsureSuccessStatusCode();
+
+        string playlist = await response.Content.ReadAsStringAsync();
+        List<IptvListItem> streams = ParseM3uPlaylist(credentials.ServiceName, playlist);
+
+        if (endpoint.Action == "get_live_streams")
+        {
+            return streams;
+        }
+
+        return streams.Select(item => item.CategoryId)
+                      .Where(category => !string.IsNullOrWhiteSpace(category))
+                      .Distinct(StringComparer.OrdinalIgnoreCase)
+                      .OrderBy(category => category)
+                      .Select(category => new IptvListItem
+                      {
+                          ServiceName = credentials.ServiceName,
+                          EndpointAction = "get_live_categories",
+                          EndpointLabel = "Live Category",
+                          Name = category,
+                          CategoryId = category,
+                          ItemId = category
+                      })
+                      .ToList();
+    }
+
+    private static List<IptvListItem> ParseM3uPlaylist(string serviceName, string playlist)
+    {
+        List<IptvListItem> items = [];
+        string[] lines = playlist.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        string name = string.Empty;
+        string group = string.Empty;
+        string logo = string.Empty;
+        string epgId = string.Empty;
+
+        foreach (string rawLine in lines)
+        {
+            string line = rawLine.Trim();
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
+
+            if (line.StartsWith("#EXTINF:", StringComparison.OrdinalIgnoreCase))
+            {
+                name = ExtractM3uDisplayName(line);
+                group = ExtractM3uAttribute(line, "group-title");
+                logo = ExtractM3uAttribute(line, "tvg-logo");
+                epgId = ExtractM3uAttribute(line, "tvg-id");
+                continue;
+            }
+
+            if (line.StartsWith("#", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (!Uri.TryCreate(line, UriKind.Absolute, out Uri? streamUri))
+            {
+                continue;
+            }
+
+            string displayName = string.IsNullOrWhiteSpace(name)
+                ? streamUri.Host
+                : name;
+
+            items.Add(new IptvListItem
+            {
+                ServiceName = serviceName,
+                EndpointAction = "get_live_streams",
+                EndpointLabel = "Live Channel",
+                Name = displayName,
+                CategoryId = group,
+                EpgChannelId = epgId,
+                ItemId = items.Count.ToString(CultureInfo.InvariantCulture),
+                ArtworkUrl = logo,
+                PlaybackUrl = line
+            });
+
+            name = string.Empty;
+            group = string.Empty;
+            logo = string.Empty;
+            epgId = string.Empty;
+        }
+
+        return items;
+    }
+
+    private static string ExtractM3uDisplayName(string line)
+    {
+        int commaIndex = line.LastIndexOf(',');
+        return commaIndex >= 0 && commaIndex + 1 < line.Length
+            ? line[(commaIndex + 1)..].Trim()
+            : string.Empty;
+    }
+
+    private static string ExtractM3uAttribute(string line, string attributeName)
+    {
+        string marker = $"{attributeName}=\"";
+        int startIndex = line.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (startIndex < 0)
+        {
+            return string.Empty;
+        }
+
+        startIndex += marker.Length;
+        int endIndex = line.IndexOf('"', startIndex);
+        return endIndex > startIndex
+            ? line[startIndex..endIndex].Trim()
+            : string.Empty;
     }
 
     private async Task LoadSeriesEpisodesAndPlayFirstAsync(IptvListItem series)
@@ -1183,8 +1368,22 @@ public partial class MainWindow : Window
             savedServices.Insert(0, new SavedService(DefaultServiceName, DefaultServerUrl, DefaultUsername, DefaultPassword));
         }
 
+        if (!File.Exists(FreeServicesSeedPath))
+        {
+            foreach (SavedService freeService in FreeStarterServices.Reverse())
+            {
+                if (!savedServices.Any(service => service.Name.Equals(freeService.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    savedServices.Insert(1, freeService);
+                }
+            }
+
+            File.WriteAllText(FreeServicesSeedPath, DateTimeOffset.Now.ToString("O"));
+        }
+
         _services.Clear();
         foreach (SavedService service in savedServices.OrderBy(service => service.Name.Equals(DefaultServiceName, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                                                      .ThenBy(service => IsFreePlaylistService(service) ? 0 : 1)
                                                       .ThenBy(service => service.Name))
         {
             _services.Add(service);
@@ -1197,6 +1396,9 @@ public partial class MainWindow : Window
     {
         if (ServicesComboBox.SelectedItem is not SavedService service)
         {
+            AccountNameTextBox.Text = DefaultServiceName;
+            ServerUrlTextBox.Text = DefaultServerUrl;
+            UsernameTextBox.Text = DefaultUsername;
             PasswordInput.Password = DefaultPassword;
             return;
         }
@@ -1205,6 +1407,21 @@ public partial class MainWindow : Window
         ServerUrlTextBox.Text = service.ServerUrl;
         UsernameTextBox.Text = service.Username;
         PasswordInput.Password = service.Password;
+    }
+
+    private void SetServiceEditorVisible(bool isVisible)
+    {
+        _isEditingService = isVisible;
+        ServiceEditorPanel.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
+        EditServiceButton.Content = "Edit";
+
+        bool canEdit = isVisible && !_isBusy;
+        AccountNameTextBox.IsEnabled = canEdit;
+        ServerUrlTextBox.IsEnabled = canEdit;
+        UsernameTextBox.IsEnabled = canEdit;
+        PasswordInput.IsEnabled = canEdit;
+        SaveServiceButton.IsEnabled = canEdit;
+        CancelServiceEditButton.IsEnabled = canEdit;
     }
 
     private void LoadLocalFileIntoResults(string path, string label, string emptyMessage)
@@ -1329,6 +1546,12 @@ public partial class MainWindow : Window
         }
 
         XtreamCredentials activeCredentials = credentials!;
+        if (IsFreePlaylistService(activeCredentials))
+        {
+            StatusTextBlock.Text = "Free M3U playlists do not include an Xtream TV Guide endpoint. Refresh Live Only to load channels.";
+            return;
+        }
+
         string epgPath = GetEpgPath(activeCredentials.ServiceName);
         SetBusy(true);
 
@@ -1487,6 +1710,7 @@ public partial class MainWindow : Window
         string serverUrl = ServerUrlTextBox.Text.Trim().TrimEnd('/');
         string username = UsernameTextBox.Text.Trim();
         string password = PasswordInput.Password.Trim();
+        bool isFreePlaylist = IsFreePlaylistUrl(serverUrl);
 
         if (string.IsNullOrWhiteSpace(serviceName))
         {
@@ -1501,7 +1725,7 @@ public partial class MainWindow : Window
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        if (!isFreePlaylist && (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)))
         {
             StatusTextBlock.Text = "Enter both username and password.";
             return false;
@@ -1509,6 +1733,28 @@ public partial class MainWindow : Window
 
         credentials = new XtreamCredentials(serviceName, serverUrl, username, password);
         return true;
+    }
+
+    private static bool IsFreePlaylistService(SavedService service)
+    {
+        return IsFreePlaylistUrl(service.ServerUrl) &&
+               string.IsNullOrWhiteSpace(service.Username) &&
+               string.IsNullOrWhiteSpace(service.Password);
+    }
+
+    private static bool IsFreePlaylistService(XtreamCredentials credentials)
+    {
+        return IsFreePlaylistUrl(credentials.ServerUrl) &&
+               string.IsNullOrWhiteSpace(credentials.Username) &&
+               string.IsNullOrWhiteSpace(credentials.Password);
+    }
+
+    private static bool IsFreePlaylistUrl(string serverUrl)
+    {
+        return Uri.TryCreate(serverUrl, UriKind.Absolute, out Uri? uri) &&
+               (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) &&
+               (uri.AbsolutePath.EndsWith(".m3u", StringComparison.OrdinalIgnoreCase) ||
+                uri.AbsolutePath.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase));
     }
 
     private bool TryGetCredentialsForItem(IptvListItem item, out XtreamCredentials? credentials)
@@ -1588,7 +1834,6 @@ public partial class MainWindow : Window
     private void SetBusy(bool isBusy)
     {
         _isBusy = isBusy;
-        SaveServiceButton.IsEnabled = !isBusy;
         LoadCacheButton.IsEnabled = !isBusy;
         RefreshCacheButton.IsEnabled = !isBusy;
         RefreshLiveButton.IsEnabled = !isBusy;
@@ -1603,10 +1848,9 @@ public partial class MainWindow : Window
         ExportDataButton.IsEnabled = !isBusy;
         ImportDataButton.IsEnabled = !isBusy;
         ServicesComboBox.IsEnabled = !isBusy;
-        ServerUrlTextBox.IsEnabled = !isBusy;
-        UsernameTextBox.IsEnabled = !isBusy;
-        PasswordInput.IsEnabled = !isBusy;
-        AccountNameTextBox.IsEnabled = !isBusy;
+        EditServiceButton.IsEnabled = !isBusy;
+        AddServiceButton.IsEnabled = !isBusy;
+        SetServiceEditorVisible(_isEditingService);
         CategoryFilterComboBox.IsEnabled = !isBusy;
         SearchTextBox.IsEnabled = !isBusy;
         UpdateSelectedPlayableState();
@@ -2333,7 +2577,7 @@ public partial class MainWindow : Window
         if (item is null || string.IsNullOrWhiteSpace(item.ArtworkUrl) ||
             !Uri.TryCreate(item.ArtworkUrl, UriKind.Absolute, out Uri? artworkUri))
         {
-            SelectedArtworkImage.Source = null;
+            SetDefaultArtwork();
             return;
         }
 
@@ -2344,6 +2588,23 @@ public partial class MainWindow : Window
             image.UriSource = artworkUri;
             image.CacheOption = BitmapCacheOption.OnLoad;
             image.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+            image.EndInit();
+            SelectedArtworkImage.Source = image;
+        }
+        catch
+        {
+            SetDefaultArtwork();
+        }
+    }
+
+    private void SetDefaultArtwork()
+    {
+        try
+        {
+            BitmapImage image = new();
+            image.BeginInit();
+            image.UriSource = new Uri("pack://application:,,,/Assets/PlaceholderIcon.ico", UriKind.Absolute);
+            image.CacheOption = BitmapCacheOption.OnLoad;
             image.EndInit();
             SelectedArtworkImage.Source = image;
         }
