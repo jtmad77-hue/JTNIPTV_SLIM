@@ -1,0 +1,17 @@
+bin/
+obj/
+dist/
+.vs/
+*.user
+*.suo
+*.cache
+*.log
+*.pdb
+
+# Local IPTV Viewer data is intentionally not part of the repository.
+services.json
+favorites.json
+history.json
+continue_watching.json
+cache_*.json
+epg_*.json
