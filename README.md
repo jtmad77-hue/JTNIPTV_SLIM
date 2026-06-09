@@ -1,52 +1,151 @@
-# IPTV Viewer
+# JTN IPTV Viewer
 
-A Windows WPF IPTV/Xtream viewer with local caching, favorites, history, continue watching, guide support, and LibVLC playback.
+A Windows WPF IPTV viewer for testing and watching legal IPTV sources. It supports Xtream-style services, free M3U playlists, local caching, favorites, watch history, continue watching, guide data, and LibVLC playback.
 
-This public source copy does not include any saved accounts, passwords, favorites, history, guide data, or cached channel lists.
+This public source copy does not include any private accounts, passwords, favorites, history, guide data, or cached channel lists.
+
+## Features
+
+- Multiple saved IPTV services
+- Free starter M3U playlists
+- Xtream API support with URL, username, and password
+- Live, movies, series, and guide browsing
+- Local cache files for faster loading
+- Favorites, history, and continue watching
+- Import/export saved app data
+- Fullscreen and resizable player layout
+- LibVLC video playback
+
+## Free Starter Lists
+
+The public build seeds a few free playlist services on first launch:
+
+- Free - IPTV.org USA
+- Free - IPTV.org All Countries
+- Free - Free-TV Public Playlist
+
+These are M3U playlist sources, so they do not require a username or password. Use **Refresh Live Only** to load their channels. Users can delete these entries if they do not want them.
 
 ## Requirements
 
-- Windows
-- .NET 10 SDK
+- Windows 10 or later
+- .NET 10 SDK to build from source
 
-## Run
+Installed/package builds are self-contained and include the .NET runtime and VLC runtime files.
+
+## Run From Source
+
+Open PowerShell in this folder:
 
 ```powershell
+cd "C:\path\to\IPTV_PUB"
 dotnet run
 ```
 
-## Publish
+## Build
+
+```powershell
+dotnet build
+```
+
+## Publish A Clean App Folder
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\publish-clean.ps1
 ```
 
-## Installer Package
+Output:
+
+```text
+dist\IptvViewer
+```
+
+Run:
+
+```text
+dist\IptvViewer\IptvViewer.exe
+```
+
+## Create Installer ZIP
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\package-installer.ps1
 ```
 
-This creates:
+Output:
 
 ```text
 dist\IptvViewer-Windows-Installer.zip
 ```
 
-The ZIP contains `install.cmd`, `install.ps1`, `uninstall.cmd`, `uninstall.ps1`, and the app files.
+The ZIP contains:
 
-To update an existing install later, build a new ZIP, unzip it, close IPTV Viewer, and run:
+- `app\` published app files
+- `install.cmd`
+- `install.ps1`
+- `uninstall.cmd`
+- `uninstall.ps1`
+- `README.txt`
+
+## Install Or Update
+
+Unzip `IptvViewer-Windows-Installer.zip`, then run:
 
 ```powershell
 .\install.cmd
 ```
 
-The installer replaces the app files and keeps saved user data under `%LOCALAPPDATA%\IptvViewer`.
+Default install location:
 
-User data is stored per machine under:
+```text
+%LOCALAPPDATA%\Programs\IptvViewer
+```
+
+To update an existing install:
+
+1. Build a new installer ZIP.
+2. Unzip it.
+3. Close IPTV Viewer if it is running.
+4. Run `install.cmd` again.
+
+The installer replaces the app files but keeps user data.
+
+## User Data
+
+User data is stored per Windows user under:
 
 ```text
 %LOCALAPPDATA%\IptvViewer
 ```
 
-Use the app's export/import buttons to move saved data between installs.
+Typical files include:
+
+- `services.json`
+- `favorites.json`
+- `history.json`
+- `continue_watching.json`
+- `cache_*.json`
+- `epg_*.json`
+
+Use **Export Saved Data** and **Import Saved Data** inside the app to move settings to another install.
+
+## Adding A Service
+
+For Xtream services:
+
+1. Click **Add** under Saved Service.
+2. Enter account name, server URL, username, and password.
+3. Click **Save Service**.
+4. Use **Refresh Live Only**, **Refresh Movies Only**, or **Refresh Series Only**.
+
+For M3U playlists:
+
+1. Click **Add**.
+2. Enter a name and a direct `.m3u` or `.m3u8` URL.
+3. Leave username and password blank.
+4. Click **Save Service**.
+5. Use **Refresh Live Only**.
+
+## Notes
+
+This app is for lawful IPTV sources only. The project does not provide private paid accounts, copyrighted streams, or hosted video content.
