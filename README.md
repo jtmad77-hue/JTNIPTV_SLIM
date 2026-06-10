@@ -10,6 +10,10 @@ JTN IPTV Viewer is developed as a joint software project with [WhisperBlinks](ht
 
 [JTMTechs.com](https://JTMTechs.com) provides design assistance, Windows distribution support, and public release packaging for the desktop build.
 
+## Active Development
+
+New features, refinements, and usability improvements are planned on a weekly release cadence as the project continues to evolve.
+
 ## Features
 
 - Multiple saved IPTV services
