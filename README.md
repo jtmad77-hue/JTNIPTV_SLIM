@@ -2,7 +2,13 @@
 
 A Windows WPF IPTV viewer for testing and watching legal IPTV sources. It supports Xtream-style services, free M3U playlists, local caching, favorites, watch history, continue watching, guide data, and LibVLC playback.
 
-This public source copy does not include any private accounts, passwords, favorites, history, guide data, or cached channel lists.
+This public source copy does not include any private paid IPTV accounts, passwords, favorites, history, guide data, or cached channel lists.
+
+## Project Credits
+
+JTN IPTV Viewer is developed as a joint software project with [WhisperBlinks](https://whisperblinks.io/), contributing application development, product direction, and implementation support.
+
+[JTMTechs.com](https://JTMTechs.com) provides design assistance, Windows distribution support, and public release packaging for the desktop build.
 
 ## Features
 
@@ -87,6 +93,24 @@ The ZIP contains:
 - `uninstall.ps1`
 - `README.txt`
 
+## Create Portable ZIP
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\package-portable.ps1
+```
+
+Output:
+
+```text
+dist\IptvViewer-Windows-Portable.zip
+```
+
+The portable ZIP is for users who do not want a full install. They unzip it and run:
+
+```text
+IptvViewer.exe
+```
+
 ## Install Or Update
 
 Unzip `IptvViewer-Windows-Installer.zip`, then run:
@@ -127,6 +151,8 @@ Typical files include:
 - `cache_*.json`
 - `epg_*.json`
 
+These files are intentionally excluded from public packages because they can contain private provider URLs, usernames, passwords, watched items, favorites, and cached channel metadata.
+
 Use **Export Saved Data** and **Import Saved Data** inside the app to move settings to another install.
 
 ## Adding A Service
@@ -149,3 +175,5 @@ For M3U playlists:
 ## Notes
 
 This app is for lawful IPTV sources only. The project does not provide private paid accounts, copyrighted streams, or hosted video content.
+
+Before publishing a public build, do not copy any files from `%LOCALAPPDATA%\IptvViewer` into the repository or `dist` package folders.
