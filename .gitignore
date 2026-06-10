@@ -15,3 +15,5 @@ history.json
 continue_watching.json
 cache_*.json
 epg_*.json
+
+MEMORY.md
