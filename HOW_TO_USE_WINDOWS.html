@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How to Use JTN IPTV Viewer on Windows</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #5f6d7e;
+      --accent: #0b6fe8;
+      --border: #d8e0eb;
+      --soft: #eef4ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 36px 18px 56px;
+    }
+
+    header {
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.15;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 17px;
+      max-width: 760px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px;
+      margin: 16px 0;
+      box-shadow: 0 8px 22px rgba(17, 36, 66, 0.06);
+    }
+
+    .note {
+      background: var(--soft);
+      border-left: 4px solid var(--accent);
+      padding: 14px 16px;
+      margin: 16px 0;
+      border-radius: 6px;
+    }
+
+    ol,
+    ul {
+      margin: 10px 0 0 22px;
+      padding: 0;
+    }
+
+    li {
+      margin: 7px 0;
+    }
+
+    code {
+      background: #eef1f6;
+      border: 1px solid #dce3ed;
+      border-radius: 5px;
+      padding: 2px 5px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.95em;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 28px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>How to Use JTN IPTV Viewer on Windows</h1>
+      <p class="subtitle">JTN IPTV Viewer is a Windows app for watching legal IPTV sources, free M3U playlists, and user-provided Xtream-style services.</p>
+    </header>
+
+    <section class="card">
+      <h2>Choose Your Download</h2>
+      <p>There are two Windows packages:</p>
+      <ul>
+        <li><strong>Installer ZIP:</strong> best for most users. It adds Start Menu and Desktop shortcuts.</li>
+        <li><strong>Portable ZIP:</strong> best if you do not want to install anything. Unzip it and run the app directly.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Install the App</h2>
+      <ol>
+        <li>Download <code>IptvViewer-Windows-Installer.zip</code>.</li>
+        <li>Right-click the ZIP and choose <strong>Extract All</strong>.</li>
+        <li>Open the extracted folder.</li>
+        <li>Double-click <code>install.cmd</code>.</li>
+        <li>Launch <strong>IPTV Viewer</strong> from the Desktop or Start Menu shortcut.</li>
+      </ol>
+      <div class="note">
+        If Windows shows a security warning, choose <strong>More info</strong>, then <strong>Run anyway</strong> only if you downloaded the app from a trusted source.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Use the Portable Version</h2>
+      <ol>
+        <li>Download <code>IptvViewer-Windows-Portable.zip</code>.</li>
+        <li>Extract the ZIP to a folder you can find again.</li>
+        <li>Open the extracted folder.</li>
+        <li>Double-click <code>IptvViewer.exe</code>.</li>
+      </ol>
+      <p>To remove the portable version, close the app and delete the extracted folder.</p>
+    </section>
+
+    <section class="card">
+      <h2>First Launch</h2>
+      <p>The app starts with a few free public playlist examples. These do not require a username or password.</p>
+      <ol>
+        <li>Select a free service from <strong>Saved Services</strong>.</li>
+        <li>Click <strong>Refresh Live Only</strong>.</li>
+        <li>Search or browse the channel list.</li>
+        <li>Select a channel and press the play button.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Add Your Own Service</h2>
+      <p>For an Xtream-style provider:</p>
+      <ol>
+        <li>Click <strong>Add</strong> under Saved Services.</li>
+        <li>Enter an account name, server URL, username, and password.</li>
+        <li>Click <strong>Save Service</strong>.</li>
+        <li>Use <strong>Refresh Live Only</strong>, <strong>Refresh Movies Only</strong>, or <strong>Refresh Series Only</strong>.</li>
+      </ol>
+      <p>For a direct M3U playlist:</p>
+      <ol>
+        <li>Click <strong>Add</strong>.</li>
+        <li>Enter a name and the direct <code>.m3u</code> or <code>.m3u8</code> URL.</li>
+        <li>Leave username and password blank.</li>
+        <li>Click <strong>Save Service</strong>, then use <strong>Refresh Live Only</strong>.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Favorites, History, and Backup</h2>
+      <ul>
+        <li>Use <strong>Add Favorite</strong> to save channels or videos you watch often.</li>
+        <li>Use <strong>Clear History</strong> if you want to remove watch history.</li>
+        <li>Use <strong>Export Saved Data</strong> to back up your saved services, favorites, and history.</li>
+        <li>Use <strong>Import Saved Data</strong> to restore settings on another install.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Where Data Is Stored</h2>
+      <p>Your private app data is stored on your own Windows account under:</p>
+      <p><code>%LOCALAPPDATA%\IptvViewer</code></p>
+      <p>Public downloads do not include private paid IPTV accounts, passwords, favorites, history, guide data, or cached channel lists.</p>
+    </section>
+
+    <section class="card">
+      <h2>Important Use Note</h2>
+      <p>JTN IPTV Viewer is for lawful IPTV sources only. The app does not provide private paid accounts, copyrighted streams, or hosted video content. Users are responsible for the playlist or provider sources they add.</p>
+    </section>
+
+    <p class="footer">Design and Windows distribution support by <a href="https://JTMTechs.com">JTMTechs.com</a>. Joint development with <a href="https://whisperblinks.io/">WhisperBlinks</a>.</p>
+  </main>
+</body>
+</html>

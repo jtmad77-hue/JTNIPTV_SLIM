@@ -138,6 +138,8 @@ To update an existing install:
 
 The installer replaces the app files but keeps user data.
 
+For a user-friendly setup and first-use walkthrough, open `HOW_TO_USE_WINDOWS.html` in a web browser.
+
 ## User Data
 
 User data is stored per Windows user under:
